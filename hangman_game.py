@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from functools import reduce
 
 
@@ -18,7 +19,7 @@ def logo_hangman():
 ''')
 
 
-def image_hangman(death):
+def image_hangman():
     die0 = '''
 
 
@@ -191,24 +192,16 @@ def image_hangman(death):
           ║
           ║              ¡GANASTE!
           ║
-          ║                  @    
-        __║__________      └─┼─┘
-      /   ║         /|       │
-     /____________ / |      / '''+chr(92)+'''
-    |             | /      d   b
-    |_____________|/
+          ║                  
+        __║__________        @
+      /   ║         /|     └─┼─┘  
+     /____________ / |       │
+    |             | /       / '''+chr(92)+'''
+    |_____________|/       d   b
 
 '''
     deaths = {0: die0, 1: die1, 2: die2, 3: die3, 4: die4, 5: die5, 6: die6, 7: die7, 8: die8, 9: die9, 10: die10, 11: die11}
-    print(deaths.get(death))
-
-
-def compare_letter(letter, dict_word, discovered, fail):
-    for l in range(len(dict_word)):
-        if dict_word.get(l) == letter:
-            discovered[l] = letter + ' '
-            fail = False
-    return discovered, fail
+    return deaths
 
 
 def read_word():
@@ -230,48 +223,73 @@ def read_word():
     return ''.join(word_li)
 
 
-def run():
+def new_word(word, dict_word, discovered, deaths, letters):
     word = read_word()
     dict_word = {i[0] : i[1] for i in enumerate(word)}
     discovered = ['- ' for i in range (len(dict_word))]
     deaths = 0
+    letters = ['A','B','C','D','E','F','G','H',
+               'I','J','K','L','M','N','O','P',
+               'Q','R','S','T','U','V','W','X',
+               'Y','Z']
+    return word, dict_word, discovered, deaths, letters
+
+
+def compare_letter(letter, dict_word, discovered, fail):
+    for l in range(len(dict_word)):
+        if dict_word.get(l) == letter:
+            discovered[l] = letter + ' '
+            fail = False
+    return discovered, fail
+
+
+def refresh(hangman_deaths,deaths,letters):
+    os.system('clear')
+    logo_hangman()
+    print('Letras faltantes: '+"  ".join(letters))
+    print(hangman_deaths.get(deaths))
+
+
+def run():
+    hangman_deaths = image_hangman()
+    word = ''
+    dict_word = {}
+    discovered = []
+    deaths = 0
+    letters = []
+    non_letter = 0
+    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
     while True:
-        os.system('clear')
-        logo_hangman()
-        image_hangman(deaths)
-        letter = input('''¡Adivina la palabra!
-'''+ ''.join(discovered) +'''
+        refresh(hangman_deaths,deaths,letters)
+        if non_letter == 1:
+            print('Debes ingresas una de las letras faltantes')
+            non_letter = 0
+        try:
+            letter = input('''¡Adivina la palabra!     '''+ ''.join(discovered) +'''
 Ingresa una letra: ''').upper()
+            letters[letters.index(letter)] = ''
+        except ValueError:
+            non_letter = 1
         fail = True
         discovered,fail = compare_letter(letter, dict_word, discovered, fail)
         if fail == True:
             deaths += 1
             if deaths == 10:
-                os.system('clear')
-                logo_hangman()
-                image_hangman(deaths)
+                refresh(hangman_deaths,deaths,letters)
                 print('¡Perdiste! La palabra era ' + word)
-                deaths = 0
-                again = input('¿Quieres intetnarlo otra vez? (1-Si 0-No):  ')
+                again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
                 if again == '1':
-                    word = read_word()
-                    dict_word = {i[0] : i[1] for i in enumerate(word)}
-                    discovered = ['- ' for i in range (len(dict_word))]
+                    word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths, letters)
                     continue
                 else:
                     print('Gracias por jugar :)')
                     break
         if ''.join(discovered).replace(' ','') == word:
-            os.system('clear')
-            logo_hangman()
-            image_hangman(11)
-            print('Tuviste ', deaths, ' erorres')
-            deaths = 0
-            again = input('¿Quieres intetnarlo otra vez? (1-Si 0-No):  ')
+            refresh(hangman_deaths,11,letters)
+            print('Tuviste ', deaths, ' erorres      '+ ''.join(discovered))
+            again = input('¿Quieres jugar otra vez? (1-Si 0-No):  ')
             if again == '1':
-                word = read_word()
-                dict_word = {i[0] : i[1] for i in enumerate(word)}
-                discovered = ['- ' for i in range (len(dict_word))]
+                word, dict_word, discovered, deaths, letters = new_word(word, dict_word, discovered, deaths,letters)
                 continue
             else:
                 print('Gracias por jugar :)')
